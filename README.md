@@ -17,7 +17,7 @@ And then execute:
 To use SnakeEyes, simply add the following to the top of any controller in which you wish to have snake case parameters. All controllers that inherit from it shall also have the behaviour 
 
 ```ruby
-class Json_Controller < ApplicationController
+class JsonController < ApplicationController
   snake_eyes_params
   
   def show
