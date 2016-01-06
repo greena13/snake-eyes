@@ -5,7 +5,7 @@ module SnakeEyes
         @snake_eyes_params = ActionController::Parameters.new(super.deep_transform_keys(&:underscore))
 
         if SnakeEyes.log_snake_eyes_parameters
-          logger.info "  SnakeEyes Parameters: #{@snake_eyes_params.except(:controller, :action).as_json}"
+          logger.info "  SnakeEyes Parameters: #{@snake_eyes_params.except(:controller, :action).inspect}"
         end
       end
 
