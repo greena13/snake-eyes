@@ -2,6 +2,12 @@
 
 Automatically convert between camel case APIs to snake case for your Rails code
 
+## Important
+
+🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧
+
+If you are using a version below `0.0.4`, please upgrade to avoid [potentially logging sensitive user information](https://github.com/greena13/snake-eyes/issues/1)  
+
 ## Installation
 
 Add this line to your application's Gemfile:

@@ -5,7 +5,9 @@ module SnakeEyes
         @snake_eyes_params = ActionController::Parameters.new(super.deep_transform_keys(&:underscore))
 
         if SnakeEyes.log_snake_eyes_parameters
-          logger.info "  SnakeEyes Parameters: #{@snake_eyes_params.except(:controller, :action).inspect}"
+          ignored_params = ActionController::LogSubscriber::INTERNAL_PARAMS
+          filtered_params = request.send(:parameter_filter).filter(@snake_eyes_params.except(*ignored_params))
+          logger.info "  SnakeEyes Parameters: #{filtered_params.inspect}"
         end
       end
 
