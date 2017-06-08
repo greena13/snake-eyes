@@ -20,17 +20,75 @@ And then execute:
 
 ## Usage
 
-To use SnakeEyes, simply add the following to the top of any controller in which you wish to have snake case parameters. All controllers that inherit from it shall also have the behaviour 
+To use SnakeEyes, simply add the following to the top of any controller in which you wish to have snake case parameters. All controllers that inherit from it shall also have the behaviour
 
 ```ruby
 class JsonController < ApplicationController
   snake_eyes_params
-  
+
   def show
-    #reference the params hash as normal  
+    #reference the params hash as normal
   end
 end
 ```
+
+### Dealing with nested params
+
+Once `snake_eyes_params` has been enabled for a controllor, `params` accepts an options hash, which can be used to specify which attributes should have the `_attributes` suffix appended.
+
+ ```ruby
+ class WithoutSnakeEyesController < ApplicationController
+
+    def show
+       params # results in:
+       # {
+       #    'user' => {
+       #      'name' => 'John Smith',
+       #      'favouriteColor' => 'blue',
+       #      'address' => { '123 street' },
+       #      'billingAddress' => { '456 road' }
+       #    }
+       #}
+    end
+ end
+
+ class WithSnakeEyesController < ApplicationController
+     snake_eyes_params
+
+     def show
+        params(nested_attributes: { user: [ :address, :billing_address ] }) # results in:
+        # {
+        #    'user_attributes' => {
+        #      'name' => 'John Smith',
+        #      'favourite_color' => 'blue',
+        #      'address_attributes' => { '123 street' },
+        #      'billing_address_attributes' => { '456 road' }
+        #    }
+        #}
+     end
+  end
+ ```
+
+To specify nested objects that should not have the `_attributes` suffix (but contain attributes that should), you can prefix them with an underscore:
+
+
+```ruby
+ class WithSnakeEyesController < ApplicationController
+     snake_eyes_params
+
+     def show
+        params(nested_attributes: { _user: [ :address, :billing_address ] }) # results in:
+        # {
+        #    'user' => {
+        #      'name' => 'John Smith',
+        #      'favourite_color' => 'blue',
+        #      'address_attributes' => { '123 street' },
+        #      'billing_address_attributes' => { '456 road' }
+        #    }
+        #}
+     end
+  end
+ ```
 
 ## Configuration
 
