@@ -1,11 +1,11 @@
 module SnakeEyes
   module InterfaceChanges
     def params(options = {})
+      validate_options(options)
+
       original_params = super()
 
       return original_params unless original_params.any?
-
-      validate_options(options)
 
       # List of subtrees maintained to mark the depth-first traversal's position
       # throughout the transformation of the original param's keys, whereby the
@@ -21,6 +21,10 @@ module SnakeEyes
       # look-ups)
 
       nested_schema = build_nested_schema(options[:nested_attributes] || {})
+
+      @previous_params ||= { }
+
+      return @previous_params[nested_schema] if @previous_params[nested_schema]
 
       # Similar to original_params_sub_trees, a list of subtrees used to maintain
       # the traversal position of nested_schema. This is kept in sync with the
@@ -74,9 +78,9 @@ module SnakeEyes
         transformed_key
       end
 
-      @snake_eyes_params = ActionController::Parameters.new(transformed_params)
+      @previous_params[nested_schema] = @snake_eyes_params = ActionController::Parameters.new(transformed_params)
 
-      log_snakized_params(nested_schema)
+      log_snakized_params
 
       @snake_eyes_params
     end
@@ -89,18 +93,13 @@ module SnakeEyes
       end
     end
 
-    def log_snakized_params(nested_schema)
+    def log_snakized_params
       if SnakeEyes.log_snake_eyes_parameters
-        @logged ||= []
 
-        if @logged.none?{|previously_logged| previously_logged == nested_schema }
-          @logged.push(nested_schema)
+        ignored_params = ActionController::LogSubscriber::INTERNAL_PARAMS
+        filtered_params = request.send(:parameter_filter).filter(@snake_eyes_params.except(*ignored_params))
 
-          ignored_params = ActionController::LogSubscriber::INTERNAL_PARAMS
-          filtered_params = request.send(:parameter_filter).filter(@snake_eyes_params.except(*ignored_params))
-
-          logger.info "  SnakeEyes Parameters: #{filtered_params.inspect}"
-        end
+        logger.info "  SnakeEyes Parameters: #{filtered_params.inspect}"
       end
     end
 
