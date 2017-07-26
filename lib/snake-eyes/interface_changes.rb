@@ -1,44 +1,73 @@
 module SnakeEyes
   module InterfaceChanges
     def params(options = {})
+      original_params = super()
+
+      return original_params unless original_params.any?
+
       validate_options(options)
 
-      untransformed_params = super()
+      # List of subtrees maintained to mark the depth-first traversal's position
+      # throughout the transformation of the original param's keys, whereby the
+      # last element is the traversal's current position and backtracking (going
+      # from child to parent) is achieved by popping off the last element.
 
-      traverse_positions = [
-          untransformed_params
+      original_params_sub_trees = [
+          original_params
       ]
 
-      nested_attributes = nested_attributes_hash(options[:nested_attributes])
+      # Convert the relatively flat format used to specify the nested attributes
+      # (easier for specification) into a series of nested objects (easier for
+      # look-ups)
 
-      nested_attributes_positions = [
-          nested_attributes
+      nested_schema = build_nested_schema(options[:nested_attributes] || {})
+
+      # Similar to original_params_sub_trees, a list of subtrees used to maintain
+      # the traversal position of nested_schema. This is kept in sync with the
+      # traversal of original_params, to ensure the correct leaf of
+      # nested_schema is checked at each point in the traversal of original_params
+
+      nested_schema_sub_trees = [
+        nested_schema
       ]
 
-      transformed_params = untransformed_params.deep_transform_keys do |key|
-        underscored_key = key.underscore
+      transformed_params = original_params.deep_transform_keys do |original_key|
+        # The matching leaf of nested_schema for this point in the traversal
+        nested_schema_sub_tree = nested_schema_sub_trees.last
 
-        nested_attributes_position = nested_attributes_positions.last
+        # Append the '_attributes' suffix if the original params key has the
+        # same name and is nested in the same place as one mentioned in the
+        # nested_attributes option
+
+        transformed_key_base = original_key.underscore
 
         transformed_key =
-            if nested_attributes_position[underscored_key]
-              underscored_key + '_attributes'
+            if nested_schema_sub_tree[transformed_key_base]
+              transformed_key_base + '_attributes'
             else
-              underscored_key
+              transformed_key_base
             end
 
-        while traverse_positions.length > 1 && traverse_positions.last[key].nil?
-          traverse_positions.pop
-          nested_attributes_positions.pop
+        # Synchronise the original params sub-tree with the current key being
+        # transformed. We can detect that the sub-tree is stale because the key
+        # being transformed does not appear amongst its own. When the sub-tree is
+        # indeed stale, move the position to its parent for the original params
+        # sub-tree and the nested schema sub-tree and repeat the check.
+
+        while original_params_sub_trees.length > 1 && original_params_sub_trees.last[original_key].nil?
+          original_params_sub_trees.pop
+          nested_schema_sub_trees.pop
         end
 
-        current_position = traverse_positions.last[underscored_key]
+        original_params_sub_tree = original_params_sub_trees.last[transformed_key_base]
 
-        if current_position.kind_of?(Hash)
-          traverse_positions.push(current_position)
+        if original_params_sub_tree.kind_of?(Hash)
+          original_params_sub_trees.push(original_params_sub_tree)
 
-          nested_attributes_positions.push(
-              nested_attributes_position[underscored_key] || nested_attributes_position['_' + underscored_key] || {}
+          nested_schema_sub_trees.push(
+              nested_schema_sub_tree[transformed_key_base] ||
+                  nested_schema_sub_tree['_' + transformed_key_base] ||
+                  {}
           )
         end
 
@@ -47,7 +76,7 @@ module SnakeEyes
 
       @snake_eyes_params = ActionController::Parameters.new(transformed_params)
 
-      log_snakized_params
+      log_snakized_params(nested_schema)
 
       @snake_eyes_params
     end
@@ -60,28 +89,41 @@ module SnakeEyes
       end
     end
 
-    def log_snakized_params
+    def log_snakized_params(nested_schema)
       if SnakeEyes.log_snake_eyes_parameters
-        ignored_params = ActionController::LogSubscriber::INTERNAL_PARAMS
-        filtered_params = request.send(:parameter_filter).filter(@snake_eyes_params.except(*ignored_params))
-        logger.info "  SnakeEyes Parameters: #{filtered_params.inspect}"
+        @logged ||= []
+
+        if @logged.none?{|previously_logged| previously_logged == nested_schema }
+          @logged.push(nested_schema)
+
+          ignored_params = ActionController::LogSubscriber::INTERNAL_PARAMS
+          filtered_params = request.send(:parameter_filter).filter(@snake_eyes_params.except(*ignored_params))
+
+          logger.info "  SnakeEyes Parameters: #{filtered_params.inspect}"
+        end
       end
     end
 
-    def nested_attributes_hash(attributes_list = [])
+    def build_nested_schema(attributes_list = [])
 
       if attributes_list.kind_of?(Array)
+
         attributes_list.inject({}) do |memo, nested_attribute|
-          memo.merge(nested_attributes_hash(nested_attribute))
+          memo.merge(build_nested_schema(nested_attribute))
         end
+
       elsif attributes_list.kind_of?(Hash)
+
         attributes_list.inject({}) do |memo, key_and_value|
           key, value = key_and_value
-          memo[key.to_s] = nested_attributes_hash(value)
+          memo[key.to_s] = build_nested_schema(value)
           memo
         end
+
       else
+
         { attributes_list.to_s.underscore => {} }
+
       end
 
     end
