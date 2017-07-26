@@ -6,7 +6,7 @@ Automatically convert between camel case APIs to snake case for your Rails code
 
 🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧
 
-If you are using a version below `0.0.4`, please upgrade to avoid [potentially logging sensitive user information](https://github.com/greena13/snake-eyes/issues/1)  
+If you are using a version below `0.0.4`, please upgrade to avoid [potentially logging sensitive user information](https://github.com/greena13/snake-eyes/issues/1)
 
 ## Installation
 
@@ -45,8 +45,8 @@ Once `snake_eyes_params` has been enabled for a controllor, `params` accepts an 
        #    'user' => {
        #      'name' => 'John Smith',
        #      'favouriteColor' => 'blue',
-       #      'address' => { '123 street' },
-       #      'billingAddress' => { '456 road' }
+       #      'address' => { line1: '123 street' },
+       #      'billingAddress' => { line1: '456 road' }
        #    }
        #}
     end
@@ -61,8 +61,8 @@ Once `snake_eyes_params` has been enabled for a controllor, `params` accepts an 
         #    'user_attributes' => {
         #      'name' => 'John Smith',
         #      'favourite_color' => 'blue',
-        #      'address_attributes' => { '123 street' },
-        #      'billing_address_attributes' => { '456 road' }
+        #      'address_attributes' => { line1: '123 street' },
+        #      'billing_address_attributes' => { line1: '456 road' }
         #    }
         #}
      end
@@ -82,8 +82,8 @@ To specify nested objects that should not have the `_attributes` suffix (but con
         #    'user' => {
         #      'name' => 'John Smith',
         #      'favourite_color' => 'blue',
-        #      'address_attributes' => { '123 street' },
-        #      'billing_address_attributes' => { '456 road' }
+        #      'address_attributes' => { 'line1: 123 street' },
+        #      'billing_address_attributes' => { line1: '456 road' }
         #    }
         #}
      end
