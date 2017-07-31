@@ -24,7 +24,7 @@ module SnakeEyes
 
       @previous_params ||= { }
 
-      # return @previous_params[nested_schema] if @previous_params[nested_schema]
+      return @previous_params[nested_schema] if @previous_params[nested_schema]
 
       # Similar to original_params_sub_trees, a list of subtrees used to maintain
       # the traversal position of nested_schema. This is kept in sync with the
