@@ -24,7 +24,7 @@ module SnakeEyes
 
       @previous_params ||= { }
 
-      return @previous_params[nested_schema] if @previous_params[nested_schema]
+      # return @previous_params[nested_schema] if @previous_params[nested_schema]
 
       # Similar to original_params_sub_trees, a list of subtrees used to maintain
       # the traversal position of nested_schema. This is kept in sync with the
@@ -36,22 +36,6 @@ module SnakeEyes
       ]
 
       transformed_params = original_params.deep_transform_keys do |original_key|
-        # The matching leaf of nested_schema for this point in the traversal
-        nested_schema_sub_tree = nested_schema_sub_trees.last
-
-        # Append the '_attributes' suffix if the original params key has the
-        # same name and is nested in the same place as one mentioned in the
-        # nested_attributes option
-
-        transformed_key_base = original_key.underscore
-
-        transformed_key =
-            if nested_schema_sub_tree[transformed_key_base]
-              transformed_key_base + '_attributes'
-            else
-              transformed_key_base
-            end
-
         # Synchronise the original params sub-tree with the current key being
         # transformed. We can detect that the sub-tree is stale because the key
         # being transformed does not appear amongst its own. When the sub-tree is
@@ -63,14 +47,27 @@ module SnakeEyes
           nested_schema_sub_trees.pop
         end
 
-        original_params_sub_tree = original_params_sub_trees.last[transformed_key_base]
+        original_params_sub_tree = original_params_sub_trees.last[original_key]
+
+        # Append the '_attributes' suffix if the original params key has the
+        # same name and is nested in the same place as one mentioned in the
+        # nested_attributes option
+
+        transformed_key_base = original_key.underscore
+
+        transformed_key =
+            if nested_schema_sub_trees.last[transformed_key_base]
+              transformed_key_base + '_attributes'
+            else
+              transformed_key_base
+            end
 
         if original_params_sub_tree.kind_of?(Hash)
           original_params_sub_trees.push(original_params_sub_tree)
 
           nested_schema_sub_trees.push(
-              nested_schema_sub_tree[transformed_key_base] ||
-                  nested_schema_sub_tree['_' + transformed_key_base] ||
+              nested_schema_sub_trees.last[transformed_key_base] ||
+                  nested_schema_sub_trees.last['_' + transformed_key_base] ||
                   {}
           )
         end
