@@ -8,6 +8,8 @@ Automatically convert between camel case APIs to snake case for your Rails code
 
 If you are using a version below `0.0.4`, please upgrade to avoid [potentially logging sensitive user information](https://github.com/greena13/snake-eyes/issues/1)
 
+🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -27,7 +29,7 @@ class JsonController < ApplicationController
   snake_eyes_params
 
   def show
-    #reference the params hash as normal
+    #reference the params method as normal
   end
 end
 ```
@@ -89,6 +91,24 @@ To specify nested objects that should not have the `_attributes` suffix (but con
      end
   end
  ```
+
+## Limitations
+
+SnakeEyes does *not* currently handle the following aspects of converting a JSON API to a Rails-compatible one:
+
+**Converting arrays of objects to hashes, keyed by item indexes**
+
+Fox example:
+
+```JSON
+{
+    "a": [
+        { "b": 1 },
+        { "b": 2 },
+        { "b": 3 }
+    ]
+}
+```
 
 ## Configuration
 
