@@ -1,11 +1,20 @@
 module SnakeEyes
   module InterfaceChanges
+    KEYS_ALWAYS_PRESENT = [
+        "controller",
+        "action"
+    ]
+
     def params(options = {})
       validate_options(options)
 
       original_params = super()
 
-      return original_params unless original_params.any?
+      params_present = (original_params.keys | KEYS_ALWAYS_PRESENT).length > KEYS_ALWAYS_PRESENT.length
+
+      unless params_present
+        return original_params
+      end
 
       # List of subtrees maintained to mark the depth-first traversal's position
       # throughout the transformation of the original param's keys, whereby the

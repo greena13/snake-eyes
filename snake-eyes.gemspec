@@ -1,25 +1,26 @@
-# coding: utf-8
-lib = File.expand_path('../lib', __FILE__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'snake-eyes/version'
+$:.push File.expand_path("../lib", __FILE__)
 
-Gem::Specification.new do |spec|
-  spec.name          = "snake-eyes"
-  spec.version       = SnakeEyes::VERSION
-  spec.authors       = ["Aleck Greenham"]
-  spec.email         = ["greenhama13@gmail.com"]
-  spec.summary       = "Automatically convert params in your controllers from camel case to snake case"
-  spec.description   = "Automatically convert params in your controllers from camel case to snake case in all or a select few controllers"
-  spec.homepage      = "https://github.com/greena13/snake-eyes"
-  spec.license       = "MIT"
+# Maintain your gem's version:
+require "snake-eyes/version"
 
-  spec.files         = `git ls-files -z`.split("\x0")
-  spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
-  spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
-  spec.require_paths = ["lib"]
+# Describe your gem and declare its dependencies:
+Gem::Specification.new do |s|
+  s.name          = "snake-eyes"
+  s.version       = SnakeEyes::VERSION
+  s.authors       = ["Aleck Greenham"]
+  s.email         = ["greenhama13@gmail.com"]
+  s.summary       = "Automatically convert params in your controllers from camel case to snake case"
+  s.description   = "Automatically convert params in your controllers from camel case to snake case in all or a select few controllers"
+  s.homepage      = "https://github.com/greena13/snake-eyes"
+  s.license       = "MIT"
 
-  spec.required_ruby_version = ">= 1.9"
+  s.files = Dir["lib/**/*", "LICENSE", "Rakefile", "README.md"]
+  s.require_paths = ["lib"]
+  s.test_files    = Dir["spec/**/*"]
 
-  spec.add_development_dependency "bundler", "~> 1.6"
-  spec.add_development_dependency 'rake', '~> 0'
+  s.add_dependency "rails", "~> 4.2.5"
+
+  s.add_development_dependency "sqlite3"
+  s.add_development_dependency "awesome_print"
+  s.add_development_dependency 'rspec-rails'
 end
