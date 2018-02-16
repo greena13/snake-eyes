@@ -87,25 +87,6 @@ To specify nested objects that should not have the `_attributes` suffix (but con
      end
   end
  ```
-
-## Limitations
-
-SnakeEyes does *not* currently handle the following aspects of converting a JSON API to a Rails-compatible one:
-
-**Converting arrays of objects to hashes, keyed by item indexes**
-
-Fox example:
-
-```JSON
-{
-    "a": [
-        { "b": 1 },
-        { "b": 2 },
-        { "b": 3 }
-    ]
-}
-```
-
 ## Configuration
 
 By default SnakeEyes logs the snake case parameters to the Rails console. You can prevent this behaviour by configuring the gem:
