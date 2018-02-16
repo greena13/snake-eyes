@@ -67,6 +67,8 @@ Once `snake_eyes_params` has been enabled for a controllor, `params` accepts an 
   end
  ```
 
+#### Avoid _attributes suffix on parents: the _ prefix
+
 To specify nested objects that should not have the `_attributes` suffix (but contain attributes that should), you can prefix them with an underscore:
 
 
@@ -87,6 +89,111 @@ To specify nested objects that should not have the `_attributes` suffix (but con
      end
   end
  ```
+
+#### Reference any element of an array: the '*' wildcard
+
+To apply the `_attributes` suffix to all elements of an array, use the `'*'` wildcard in place of the array index:
+
+```ruby
+class WithSnakeEyesController < ApplicationController
+    snake_eyes_params
+
+    def show
+        # Given
+        params(nested_attributes: [ _array: { '*' => :string } ])
+
+        # If the params are:
+        #
+        # 'array' => [
+        #      { 'string' => 'string' },
+        #      { 'string' => 'string2' },
+        #  ]
+        #
+        # What will be returned:
+        #
+        # 'array' => [
+        #      { 'string_attributes' => 'string' },
+        #      { 'string_attributes' => 'string2' },
+        #  ]
+    end
+end
+```
+
+## Substitutions
+
+If you want to substitute alternative values for the ones that the controller actually receives, you can do that using the `substitutions` option:
+
+```ruby
+class WithSnakeEyesController < ApplicationController
+    snake_eyes_params
+
+    def show
+        # Given
+        params(substitutions: {
+            shallow_object: {
+                price: { replace: 'FREE', with: 0.00 }
+            }
+        })
+
+        # If params is:
+        #
+        # 'shallowObject' => {
+        #      'price' => 'FREE'
+        #  }
+        #
+        # What will be returned:
+        #
+        # 'shallow_object' => {
+        #     'price' => 0.00
+        # }
+    end
+end
+```
+
+You can also provide multiple substitutions as an array. They are matched left-to-right, and the first matching substitution is the one that is used.
+
+```ruby
+class WithSnakeEyesController < ApplicationController
+    snake_eyes_params
+
+    def show
+        # Given
+        params(substitutions: {
+            shallow_object: {
+                price: [
+                    { replace: 'FREE', with: 0.00 } ,
+                    { replace: 'EXPENSIVE', with: 999.00 }
+                ]
+            }
+        })
+
+        # If params is:
+        #
+        # 'shallowObject' => {
+        #      'price' => 'FREE'
+        #  }
+        #
+        # What will be returned:
+        #
+        # 'shallow_object' => {
+        #     'price' => 0.00
+        # }
+
+        # If params is:
+        #
+        # 'shallowObject' => {
+        #      'price' => 'EXPENSIVE'
+        #  }
+        #
+        # What will be returned:
+        #
+        # 'shallow_object' => {
+        #     'price' => 999.00
+        # }
+    end
+end
+```
+
 ## Configuration
 
 By default SnakeEyes logs the snake case parameters to the Rails console. You can prevent this behaviour by configuring the gem:
