@@ -1,14 +1,10 @@
 # SnakeEyes
 
+[![Gem](https://img.shields.io/gem/dt/snake-eyes.svg)]()
+[![Build Status](https://travis-ci.org/greena13/snake-eyes.svg)](https://travis-ci.org/greena13/snake-eyes)
+[![GitHub license](https://img.shields.io/github/license/greena13/snake-eyes.svg)](https://github.com/greena13/snake-eyes/blob/master/LICENSE)
+
 Automatically convert between camel case APIs to snake case for your Rails code
-
-## Important
-
-🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧
-
-If you are using a version below `0.0.4`, please upgrade to avoid [potentially logging sensitive user information](https://github.com/greena13/snake-eyes/issues/1)
-
-🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧
 
 ## Installation
 
