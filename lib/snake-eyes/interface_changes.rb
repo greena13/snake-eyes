@@ -16,75 +16,23 @@ module SnakeEyes
         return original_params
       end
 
-      # List of subtrees maintained to mark the depth-first traversal's position
-      # throughout the transformation of the original param's keys, whereby the
-      # last element is the traversal's current position and backtracking (going
-      # from child to parent) is achieved by popping off the last element.
-
-      original_params_sub_trees = [
-          original_params
-      ]
-
-      # Convert the relatively flat format used to specify the nested attributes
-      # (easier for specification) into a series of nested objects (easier for
-      # look-ups)
-
-      nested_schema = build_nested_schema(options[:nested_attributes] || {})
-
       @previous_params ||= { }
 
-      return @previous_params[nested_schema] if @previous_params[nested_schema]
-
-      # Similar to original_params_sub_trees, a list of subtrees used to maintain
-      # the traversal position of nested_schema. This is kept in sync with the
-      # traversal of original_params, to ensure the correct leaf of
-      # nested_schema is checked at each point in the traversal of original_params
-
-      nested_schema_sub_trees = [
-        nested_schema
-      ]
-
-      transformed_params = original_params.deep_transform_keys do |original_key|
-        # Synchronise the original params sub-tree with the current key being
-        # transformed. We can detect that the sub-tree is stale because the key
-        # being transformed does not appear amongst its own. When the sub-tree is
-        # indeed stale, move the position to its parent for the original params
-        # sub-tree and the nested schema sub-tree and repeat the check.
-
-        while original_params_sub_trees.length > 1 && original_params_sub_trees.last[original_key].nil?
-          original_params_sub_trees.pop
-          nested_schema_sub_trees.pop
+      nested_schema = build_options_schema(options[:nested_attributes] || {}, '') do |target, parent_name|
+        if parent_name.empty? || parent_name.starts_with?('_')
+          target
+        else
+          target.merge({ _attributes_suffix: true })
         end
-
-        original_params_sub_tree = original_params_sub_trees.last[original_key]
-
-        # Append the '_attributes' suffix if the original params key has the
-        # same name and is nested in the same place as one mentioned in the
-        # nested_attributes option
-
-        transformed_key_base = original_key.underscore
-
-        transformed_key =
-            if nested_schema_sub_trees.last[transformed_key_base]
-              transformed_key_base + '_attributes'
-            else
-              transformed_key_base
-            end
-
-        if original_params_sub_tree.kind_of?(Hash)
-          original_params_sub_trees.push(original_params_sub_tree)
-
-          nested_schema_sub_trees.push(
-              nested_schema_sub_trees.last[transformed_key_base] ||
-                  nested_schema_sub_trees.last['_' + transformed_key_base] ||
-                  {}
-          )
-        end
-
-        transformed_key
       end
 
-      @previous_params[nested_schema] = @snake_eyes_params = ActionController::Parameters.new(transformed_params)
+      options[:nested_attributes] = nested_schema
+
+      return @previous_params[options] if @previous_params[options]
+
+      transformed_params = deep_transform(original_params, options)
+
+      @previous_params[options] = @snake_eyes_params = ActionController::Parameters.new(transformed_params)
 
       log_snakized_params
 
@@ -95,7 +43,7 @@ module SnakeEyes
 
     def validate_options(options)
       options.keys.each do |key|
-        raise ArgumentError.new("SnakeEyes: params received unrecognised option '#{key}'") if key != :nested_attributes
+        raise ArgumentError.new("SnakeEyes: params received unrecognised option '#{key}'") if key != :nested_attributes && key != :substitutions
       end
     end
 
@@ -109,28 +57,117 @@ module SnakeEyes
       end
     end
 
-    def build_nested_schema(attributes_list = [])
+    def deep_transform(target, options = {})
 
-      if attributes_list.kind_of?(Array)
+      nested_attributes = options[:nested_attributes] || {}
 
-        attributes_list.inject({}) do |memo, nested_attribute|
-          memo.merge(build_nested_schema(nested_attribute))
+      substitutions =
+          if options[:substitutions].kind_of?(Array)
+            options[:substitutions].map(&:stringify_keys)
+          else
+            (options[:substitutions] || {}).stringify_keys
+          end
+
+      if target.kind_of?(Array)
+        target.map do |targetElement|
+          deep_transform(targetElement, {
+              nested_attributes: nested_attributes['*'],
+              substitutions: substitutions.kind_of?(Array) ? {} : substitutions['*']
+          })
         end
 
-      elsif attributes_list.kind_of?(Hash)
+      elsif target.kind_of?(Hash)
 
-        attributes_list.inject({}) do |memo, key_and_value|
+        target.inject({}) do |memo, key_and_value|
           key, value = key_and_value
-          memo[key.to_s] = build_nested_schema(value)
+
+          # Append the '_attributes' suffix if the original params key has the
+          # same name and is nested in the same place as one mentioned in the
+          # nested_attributes option
+
+          transformed_key_base = key.to_s.underscore
+
+          transformed_key =
+              if nested_attributes[transformed_key_base] && nested_attributes[transformed_key_base][:_attributes_suffix]
+                transformed_key_base + '_attributes'
+              else
+                transformed_key_base
+              end
+
+          transformed_value = deep_transform(value,
+            {
+                nested_attributes: nested_attributes[transformed_key_base] || nested_attributes['_' + transformed_key_base],
+                substitutions: substitutions.kind_of?(Array) ? {} : substitutions[transformed_key_base]
+            }
+          )
+
+          memo[transformed_key] = transformed_value
+
           memo
         end
 
       else
+        perform_substitution(target, substitutions)
+      end
 
-        { attributes_list.to_s.underscore => {} }
+    end
+
+    def perform_substitution(target, substitution)
+      if substitution.kind_of?(Array)
+        matching_substitution = substitution.find do |substitution_item|
+          has_substitution_keys?(substitution_item) && target === substitution_item["replace"]
+        end
+
+        if matching_substitution
+          matching_substitution["with"]
+        else
+          target
+        end
+
+      else
+        if has_substitution_keys?(substitution)
+          target === substitution["replace"] ? substitution["with"] : target
+        else
+          target
+        end
+      end
+    end
+
+    def has_substitution_keys?(substitution)
+      substitution.has_key?("replace") && substitution.has_key?("with")
+    end
+
+    def build_options_schema(attributes_list = [], parent_name = '', options = {}, &block)
+
+      if attributes_list.kind_of?(Array)
+        attributes_array = attributes_list.inject({}) do |memo, nested_attribute|
+          memo.merge(build_options_schema(nested_attribute, parent_name, options, &block))
+        end
+
+        yield(attributes_array, parent_name)
+
+      elsif attributes_list.kind_of?(Hash) && (!options[:internal_attributes] || (attributes_list.keys & options[:internal_attributes]).length > options[:internal_attributes].length)
+
+        attributes_hash = attributes_list.inject({}) do |memo, key_and_value|
+          key, value = key_and_value
+
+          memo[key.to_s] = yield(build_options_schema(value, '', options, &block), key.to_s)
+
+          memo
+        end
+
+        yield(attributes_hash, parent_name)
+      else
+
+        {
+            attributes_list.to_s.underscore => yield({}, attributes_list.to_s.underscore)
+        }
 
       end
 
     end
+
+
   end
+
 end
