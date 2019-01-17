@@ -5,6 +5,20 @@ module SnakeEyes
         "action"
     ]
 
+    if Rails::VERSION::MAJOR >= 5
+      def _prepare(transformed_params)
+        # We permit all parameter values so that we many convert it to a hash, to work
+        # with ActionPack 5.2's ActionController::Parameters initializer
+        _transform_params = transformed_params.dup
+        _transform_params.permit!
+        _transform_params.to_h
+      end
+    else
+      def _prepare(transformed_params)
+        transformed_params
+      end
+    end
+
     def params(options = {})
       validate_options(options)
 
@@ -30,9 +44,10 @@ module SnakeEyes
 
       return @previous_params[options] if @previous_params[options]
 
-      transformed_params = deep_transform(original_params, options)
+      transformed_params = deep_transform(_prepare(original_params), options)
 
-      @previous_params[options] = @snake_eyes_params = ActionController::Parameters.new(transformed_params)
+      @previous_params[options] =
+        @snake_eyes_params = ActionController::Parameters.new(transformed_params)
 
       log_snakized_params
 
@@ -49,11 +64,10 @@ module SnakeEyes
 
     def log_snakized_params
       if SnakeEyes.log_snake_eyes_parameters
-
         ignored_params = ActionController::LogSubscriber::INTERNAL_PARAMS
         filtered_params = request.send(:parameter_filter).filter(@snake_eyes_params.except(*ignored_params))
 
-        logger.info "  SnakeEyes Parameters: #{filtered_params.inspect}"
+        logger.info "  SnakeEyes Parameters: #{_prepare(filtered_params).inspect}"
       end
     end
 
