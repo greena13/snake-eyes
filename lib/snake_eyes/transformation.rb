@@ -3,8 +3,9 @@
 module SnakeEyes
   module Transformation
     def snakeize(original_params, options)
-      transformed_params = deep_transform(_prepare(original_params), options)
-      ActionController::Parameters.new(transformed_params)
+      ActionController::Parameters.new(
+        deep_transform(_prepare(original_params), options)
+      )
     end
 
     private
