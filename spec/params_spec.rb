@@ -2,6 +2,7 @@
 
 require 'spec_helper'
 
+# rubocop:disable Metrics/BlockLength
 RSpec.describe 'params default behaviour:', type: :controller do
   context 'when no arguments are passed' do
     controller ApplicationController do
@@ -86,6 +87,7 @@ RSpec.describe 'params default behaviour:', type: :controller do
               }
             ]
 
+        # noinspection RubyStringKeysInHashInspection
         expect(assigns(:params_snake_case)).to eql(
           'controller' => 'anonymous',
           'action' => 'index',
@@ -150,3 +152,4 @@ RSpec.describe 'params default behaviour:', type: :controller do
     end
   end
 end
+# rubocop:enable Metrics/BlockLength
