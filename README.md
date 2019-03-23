@@ -32,7 +32,7 @@ end
 
 ### Dealing with nested params
 
-Once `snake_eyes_params` has been enabled for a controllor, `params` accepts an options hash, which can be used to specify which attributes should have the `_attributes` suffix appended.
+Once `snake_eyes_params` has been enabled for a controller, `params` accepts an options hash, which can be used to specify which attributes should have the `_attributes` suffix appended.
 
  ```ruby
  class WithoutSnakeEyesController < ApplicationController

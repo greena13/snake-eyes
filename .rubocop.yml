@@ -1,0 +1,44 @@
+AllCops:
+  TargetRubyVersion: 2.5
+  Exclude:
+    - /**/db/schema.rb
+    - node_modules/**/*
+
+Metrics/LineLength:
+  Max: 120
+
+Metrics/AbcSize:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/RescueModifier:
+  Enabled: false
+
+Layout/MultilineOperationIndentation:
+  Enabled: false
+
+Layout/TrailingWhitespace:
+  Enabled: false
+
+Metrics/MethodLength:
+  CountComments: false
+  Max: 20
+
+Metrics/PerceivedComplexity:
+  Max: 20
+
+Metrics/CyclomaticComplexity:
+  Max: 20
+
+Rails:
+  Enabled: true
+
+Metrics/BlockLength:
+  ExcludedMethods:
+    - register
+    - describe

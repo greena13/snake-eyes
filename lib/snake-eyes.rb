@@ -1,17 +1,17 @@
-require "snake-eyes/version"
-require "snake-eyes/interface_changes"
+# frozen_string_literal: true
+
+require 'snake-eyes/version'
+require 'snake-eyes/interface_changes'
 
 module SnakeEyes
   class << self
     attr_accessor :log_snake_eyes_parameters
 
     def configuration
-      if block_given?
-        yield(SnakeEyes)
-      end
+      yield(SnakeEyes) if block_given?
     end
 
-    alias :config :configuration
+    alias config configuration
   end
 
   @log_snake_eyes_parameters = true
