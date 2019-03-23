@@ -5,7 +5,7 @@ require File.expand_path('boot', __dir__)
 require 'rails/all'
 
 Bundler.require(*Rails.groups)
-require 'snake_eyes'
+require 'snake-eyes'
 
 module Dummy
   class Application < Rails::Application

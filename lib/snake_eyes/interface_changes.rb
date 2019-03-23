@@ -4,7 +4,7 @@ require File.expand_path('configuration', __dir__)
 require File.expand_path('memoization', __dir__)
 require File.expand_path('compatibility', __dir__)
 require File.expand_path('logging', __dir__)
-require File.expand_path('transformation', __dir__)
+require File.expand_path('transform', __dir__)
 
 module SnakeEyes
   module InterfaceChanges
@@ -12,7 +12,7 @@ module SnakeEyes
     include Memoization
     include Compatibility
     include Logging
-    include Transformation
+    include Transform
 
     KEYS_ALWAYS_PRESENT = %w[controller action].freeze
 
@@ -24,14 +24,14 @@ module SnakeEyes
           # noinspection RubyResolve
           original_params = old_params
 
-          return original_params unless present?(original_params)
+          return original_params unless keys_to_snakeize?(original_params)
 
           validate_options(options)
           add_nested_attributes!(options)
 
           return params_from_cache(options) if params_in_cache?(options)
 
-          @snake_eyes_params = snakeize(original_params, options)
+          @snake_eyes_params = transform(original_params, options)
 
           log(@snake_eyes_params)
 
@@ -40,7 +40,7 @@ module SnakeEyes
 
         private
 
-        def present?(params)
+        def keys_to_snakeize?(params)
           (params.keys || KEYS_ALWAYS_PRESENT).length > KEYS_ALWAYS_PRESENT.length
         end
       end

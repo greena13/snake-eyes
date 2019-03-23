@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 module SnakeEyes
-  module Transformation
-    def snakeize(original_params, options)
+  module Transform
+    def transform(original_params, options)
       ActionController::Parameters.new(
         deep_transform(_prepare(original_params), options)
       )
@@ -56,13 +56,18 @@ module SnakeEyes
       end
     end
 
+    def snakeize(key)
+      key.to_s.underscore.gsub(/(\d+)/, '_\1')
+    end
+
     def deep_transform_hash(target, nested_attributes, substitutions)
       target.each_with_object({}) do |(key, value), memo|
+
+        transformed_key_base = snakeize(key)
+
         # Append the '_attributes' suffix if the original params key has the
         # same name and is nested in the same place as one mentioned in the
         # nested_attributes option
-        transformed_key_base = key.to_s.underscore
-
         transformed_key =
           if nested_attributes[transformed_key_base] &&
             nested_attributes[transformed_key_base][:_attributes_suffix]
@@ -72,19 +77,24 @@ module SnakeEyes
             transformed_key_base
           end
 
-        transformed_key_base = key.to_s.underscore
-
         hash_nested_attributes =
           nested_attributes[transformed_key_base] || nested_attributes['_' + transformed_key_base]
 
         hash_substitutions =
           substitutions.is_a?(Array) ? {} : substitutions[transformed_key_base]
 
-        memo[transformed_key] = deep_transform(
+        transformed_hash = deep_transform(
           value,
           nested_attributes: hash_nested_attributes,
           substitutions: hash_substitutions
         )
+
+        memo[transformed_key] =
+          if memo.key?(transformed_key) && memo[transformed_key].is_a?(Hash)
+            memo[transformed_key].deep_merge(transformed_hash)
+          else
+            transformed_hash
+          end
       end
     end
 
