@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    snake-eyes (1.0.0)
+    snake-eyes (2.0.0)
       rails (>= 4.2.5)
 
 GEM
