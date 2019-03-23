@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'snake-eyes/version'
-require 'snake-eyes/interface_changes'
+require 'snake_eyes/version'
+require 'snake_eyes/interface_changes'
 
 module SnakeEyes
   class << self
