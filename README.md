@@ -1,4 +1,7 @@
-# SnakeEyes
+<p align="center">
+  <img src="https://svgshare.com/i/CS9.svg" width="200px" /><br/>
+  <h2 align="center">SnakeEyes</h2>
+</p>
 
 [![Gem](https://img.shields.io/gem/dt/snake-eyes.svg)]()
 [![Build Status](https://travis-ci.org/greena13/snake-eyes.svg)](https://travis-ci.org/greena13/snake-eyes)
